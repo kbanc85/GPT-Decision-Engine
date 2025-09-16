@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tool Decision Engine</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #FFFFFF;
+            color: #000000;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .quiz-container {
+            max-width: 800px;
+            width: 100%;
+            background: #FFFFFF;
+            border: 4px solid #000000;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #BFBFBF;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #D63233;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .header {
+            padding: 40px;
+            text-align: center;
+            border-bottom: 2px solid #3D3D3D;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin: 0 0 10px 0;
+            color: #000000;
+            font-weight: 700;
+        }
+        
+        .header p {
+            color: #3D3D3D;
+            font-size: 1.1em;
+            margin: 0;
+        }
+        
+        .question-section {
+            padding: 50px;
+            text-align: center;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .question-section.hidden {
+            display: none;
+        }
+        
+        .question-number {
+            font-size: 0.9em;
+            color: #D63233;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .question {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: #000000;
+            line-height: 1.2;
+        }
+        
+        .question-subtext {
+            font-size: 1.1em;
+            color: #3D3D3D;
+            margin-bottom: 40px;
+            line-height: 1.5;
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .button-grid.single {
+            grid-template-columns: 1fr;
+            max-width: 400px;
+        }
+        
+        .button-grid.triple {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .choice-btn {
+            padding: 25px 20px;
+            border: 3px solid #3D3D3D;
+            background: #FFFFFF;
+            color: #000000;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .choice-btn:hover {
+            border-color: #D63233;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(214, 50, 51, 0.15);
+        }
+        
+        .choice-btn.selected {
+            background: #D63233;
+            color: #FFFFFF;
+            border-color: #D63233;
+        }
+        
+        .choice-btn .emoji {
+            display: block;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .choice-btn .title {
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .choice-btn .desc {
+            font-size: 0.9em;
+            color: #3D3D3D;
+            line-height: 1.3;
+        }
+        
+        .choice-btn.selected .desc {
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .navigation {
+            padding: 30px 50px;
+            border-top: 2px solid #3D3D3D;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-btn {
+            padding: 12px 30px;
+            border: 2px solid #000000;
+            background: #FFFFFF;
+            color: #000000;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn:hover {
+            background: #000000;
+            color: #FFFFFF;
+        }
+        
+        .nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        .nav-btn.primary {
+            background: #D63233;
+            border-color: #D63233;
+            color: #FFFFFF;
+        }
+        
+        .nav-btn.primary:hover {
+            background: #000000;
+            border-color: #000000;
+        }
+        
+        .results-section {
+            padding: 50px;
+            text-align: center;
+        }
+        
+        .results-section.hidden {
+            display: none;
+        }
+        
+        .result-card {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px;
+            border: 4px solid #000000;
+            background: #FFFFFF;
+        }
+        
+        .result-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        .result-title {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #000000;
+        }
+        
+        .result-title.project {
+            color: #000000;
+        }
+        
+        .result-title.customgpt {
+            color: #D63233;
+        }
+        
+        .result-subtitle {
+            font-size: 1.2em;
+            color: #3D3D3D;
+            margin-bottom: 30px;
+        }
+        
+        .result-reasoning {
+            text-align: left;
+            background: #FFFFFF;
+            border: 2px solid #BFBFBF;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        
+        .result-reasoning h4 {
+            margin: 0 0 15px 0;
+            color: #000000;
+            font-size: 1.1em;
+        }
+        
+        .reasoning-point {
+            margin-bottom: 10px;
+            color: #3D3D3D;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .reasoning-point:before {
+            content: "→";
+            color: #D63233;
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+        
+        .restart-btn {
+            margin-top: 30px;
+            padding: 15px 40px;
+            border: 2px solid #D63233;
+            background: #D63233;
+            color: #FFFFFF;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .restart-btn:hover {
+            background: #000000;
+            border-color: #000000;
+        }
+        
+        .scenario-preview {
+            margin-top: 30px;
+            padding: 20px;
+            background: #FFFFFF;
+            border: 2px solid #3D3D3D;
+            text-align: left;
+        }
+        
+        .scenario-title {
+            font-weight: 600;
+            color: #000000;
+            margin-bottom: 10px;
+        }
+        
+        .scenario-desc {
+            color: #3D3D3D;
+            font-size: 0.95em;
+            line-height: 1.4;
+        }
+        
+        @media (max-width: 768px) {
+            .quiz-container {
+                margin: 10px;
+            }
+            
+            .question-section, .navigation {
+                padding: 30px 25px;
+            }
+            
+            .header {
+                padding: 30px 25px;
+            }
+            
+            .button-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .button-grid.triple {
+                grid-template-columns: 1fr;
+            }
+            
+            .choice-btn {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div class="header">
+            <h1>AI Tool Decision Engine</h1>
+            <p>Find your perfect match: GPT Projects vs Custom GPTs</p>
+        </div>
+        
+        <!-- Question 1: Frequency -->
+        <div class="question-section" id="question1">
+            <div class="question-number">Question 1 of 3</div>
+            <div class="question">How often will you use this AI?</div>
+            <div class="question-subtext">The creator of 71+ custom AIs says frequency is the first filter</div>
+            
+            <div class="button-grid triple">
+                <div class="choice-btn" data-value="once" onclick="selectChoice(this, 'frequency')">
+                    <div class="emoji">🎯</div>
+                    <div class="title">One-Shot Task</div>
+                    <div class="desc">Just need it once, then I'm done</div>
+                </div>
+                <div class="choice-btn" data-value="occasional" onclick="selectChoice(this, 'frequency')">
+                    <div class="emoji">📅</div>
+                    <div class="title">Monthly Use</div>
+                    <div class="desc">Every few weeks or monthly projects</div>
+                </div>
+                <div class="choice-btn" data-value="frequent" onclick="selectChoice(this, 'frequency')">
+                    <div class="emoji">⚡</div>
+                    <div class="title">Daily Driver</div>
+                    <div class="desc">Multiple times per week minimum</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Question 2: Quality -->
+        <div class="question-section hidden" id="question2">
+            <div class="question-number">Question 2 of 3</div>
+            <div class="question">How critical is quality?</div>
+            <div class="question-subtext">This determines if you need advanced features like custom memory and deep research</div>
+            
+            <div class="button-grid">
+                <div class="choice-btn" data-value="casual" onclick="selectChoice(this, 'quality')">
+                    <div class="emoji">🤷</div>
+                    <div class="title">Good Enough</div>
+                    <div class="desc">Basic results are fine, just need something quick</div>
+                </div>
+                <div class="choice-btn" data-value="important" onclick="selectChoice(this, 'quality')">
+                    <div class="emoji">📊</div>
+                    <div class="title">Quality Matters</div>
+                    <div class="desc">Results need to be solid and reliable</div>
+                </div>
+            </div>
+            <div class="button-grid single">
+                <div class="choice-btn" data-value="critical" onclick="selectChoice(this, 'quality')">
+                    <div class="emoji">💎</div>
+                    <div class="title">Mission Critical</div>
+                    <div class="desc">Like the tax specialist that saved $10k - quality is everything</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Question 3: Audience -->
+        <div class="question-section hidden" id="question3">
+            <div class="question-number">Question 3 of 3</div>
+            <div class="question">Who needs access?</div>
+            <div class="question-subtext">This is the PRIMARY differentiator - shareability is everything</div>
+            
+            <div class="button-grid triple">
+                <div class="choice-btn" data-value="personal" onclick="selectChoice(this, 'audience')">
+                    <div class="emoji">👤</div>
+                    <div class="title">Just Me</div>
+                    <div class="desc">Private personal use only</div>
+                </div>
+                <div class="choice-btn" data-value="team" onclick="selectChoice(this, 'audience')">
+                    <div class="emoji">👥</div>
+                    <div class="title">My Team</div>
+                    <div class="desc">Need to share with colleagues</div>
+                </div>
+                <div class="choice-btn" data-value="public" onclick="selectChoice(this, 'audience')">
+                    <div class="emoji">🌍</div>
+                    <div class="title">Public Sharing</div>
+                    <div class="desc">Want others to discover and use it</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results -->
+        <div class="results-section hidden" id="results">
+            <div class="result-card">
+                <div class="result-icon" id="resultIcon">🎯</div>
+                <div class="result-title" id="resultTitle">Your Recommendation</div>
+                <div class="result-subtitle" id="resultSubtitle">Based on your specific needs</div>
+                
+                <div class="result-reasoning">
+                    <h4>Why this recommendation:</h4>
+                    <div id="reasoningContent"></div>
+                </div>
+                
+                <div class="scenario-preview" id="scenarioPreview"></div>
+                
+                <button class="restart-btn" onclick="restartQuiz()">Take Quiz Again</button>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <button class="nav-btn" id="backBtn" onclick="goBack()" disabled>← Previous</button>
+            <div id="questionIndicator">1 of 3</div>
+            <button class="nav-btn primary" id="nextBtn" onclick="goNext()" disabled>Next →</button>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let answers = {
+            frequency: null,
+            quality: null,
+            audience: null
+        };
+        
+        const scenarios = {
+            project: {
+                title: "YouTube Title Creator",
+                desc: "Personal use, critical quality, database of proven frameworks - saved hours of brainstorming with consistent high-performing titles"
+            },
+            customgpt: {
+                title: "Team Support Bot",
+                desc: "Shareable with team, good quality sufficient, handles common questions - frees up everyone's time with consistent answers"
+            }
+        };
+        
+        function updateProgress() {
+            const progress = (currentStep / 3) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('questionIndicator').textContent = `${currentStep} of 3`;
+        }
+        
+        function selectChoice(btn, type) {
+            // Remove selection from siblings
+            btn.parentNode.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+            // Add selection to clicked button
+            btn.classList.add('selected');
+            // Store answer
+            answers[type] = btn.dataset.value;
+            // Enable next button
+            document.getElementById('nextBtn').disabled = false;
+        }
+        
+        function goNext() {
+            if (currentStep < 3) {
+                // Hide current question
+                document.getElementById(`question${currentStep}`).classList.add('hidden');
+                currentStep++;
+                // Show next question
+                document.getElementById(`question${currentStep}`).classList.remove('hidden');
+                // Update navigation
+                updateNavigation();
+                updateProgress();
+                // Reset next button
+                document.getElementById('nextBtn').disabled = true;
+            } else {
+                // Show results
+                showResults();
+            }
+        }
+        
+        function goBack() {
+            if (currentStep > 1) {
+                // Hide current question
+                document.getElementById(`question${currentStep}`).classList.add('hidden');
+                currentStep--;
+                // Show previous question
+                document.getElementById(`question${currentStep}`).classList.remove('hidden');
+                // Update navigation
+                updateNavigation();
+                updateProgress();
+                // Enable next button if answer exists
+                checkCurrentAnswer();
+            }
+        }
+        
+        function checkCurrentAnswer() {
+            const questionTypes = ['frequency', 'quality', 'audience'];
+            const currentType = questionTypes[currentStep - 1];
+            if (answers[currentType]) {
+                document.getElementById('nextBtn').disabled = false;
+                // Re-select the button
+                const selectedValue = answers[currentType];
+                const btn = document.querySelector(`[data-value="${selectedValue}"]`);
+                if (btn) btn.classList.add('selected');
+            }
+        }
+        
+        function updateNavigation() {
+            const backBtn = document.getElementById('backBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            backBtn.disabled = currentStep === 1;
+            
+            if (currentStep === 3) {
+                nextBtn.textContent = 'Get Results →';
+            } else {
+                nextBtn.textContent = 'Next →';
+            }
+        }
+        
+        function calculateRecommendation() {
+            let projectScore = 0;
+            let customgptScore = 0;
+            let reasoning = [];
+            
+            // Frequency scoring
+            if (answers.frequency === 'once') {
+                reasoning.push("One-time tasks don't benefit much from custom AI setup");
+            } else if (answers.frequency === 'occasional') {
+                projectScore += 1;
+                customgptScore += 1;
+                reasoning.push("Occasional use justifies the setup effort");
+            } else if (answers.frequency === 'frequent') {
+                projectScore += 2;
+                customgptScore += 2;
+                reasoning.push("Frequent use makes custom AI setup very worthwhile");
+            }
+            
+            // Quality scoring - Projects have more advanced features
+            if (answers.quality === 'casual') {
+                customgptScore += 1;
+                reasoning.push("Basic quality needs can be met with standard Custom GPT features");
+            } else if (answers.quality === 'important') {
+                projectScore += 2;
+                customgptScore += 1;
+                reasoning.push("Quality requirements favor Projects with their advanced capabilities");
+            } else if (answers.quality === 'critical') {
+                projectScore += 4;
+                customgptScore += 1;
+                reasoning.push("Mission-critical quality demands Projects' custom memory, deep research, and agent mode");
+            }
+            
+            // Audience scoring - PRIMARY differentiator
+            if (answers.audience === 'personal') {
+                projectScore += 5;
+                reasoning.push("Personal use is Projects' sweet spot - more features, better privacy");
+            } else if (answers.audience === 'team') {
+                customgptScore += 6;
+                reasoning.push("Team sharing REQUIRES Custom GPTs - Projects can't be shared");
+            } else if (answers.audience === 'public') {
+                customgptScore += 7;
+                reasoning.push("Public distribution ONLY possible with Custom GPTs");
+            }
+            
+            return {
+                recommendation: projectScore > customgptScore ? 'project' : 'customgpt',
+                confidence: Math.abs(projectScore - customgptScore) >= 3 ? 'High' : 'Medium',
+                reasoning: reasoning,
+                scores: { project: projectScore, customgpt: customgptScore }
+            };
+        }
+        
+        function showResults() {
+            // Hide questions and navigation
+            document.querySelectorAll('.question-section').forEach(q => q.classList.add('hidden'));
+            document.querySelector('.navigation').style.display = 'none';
+            
+            // Show results
+            const resultsSection = document.getElementById('results');
+            resultsSection.classList.remove('hidden');
+            
+            // Calculate and display recommendation
+            const result = calculateRecommendation();
+            const resultIcon = document.getElementById('resultIcon');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultSubtitle = document.getElementById('resultSubtitle');
+            const reasoningContent = document.getElementById('reasoningContent');
+            const scenarioPreview = document.getElementById('scenarioPreview');
+            
+            if (result.recommendation === 'project') {
+                resultIcon.textContent = '🚀';
+                resultTitle.textContent = 'GPT Projects';
+                resultTitle.className = 'result-title project';
+                resultSubtitle.textContent = `${result.confidence} Confidence Recommendation`;
+                
+                const scenario = scenarios.project;
+                scenarioPreview.innerHTML = `
+                    <div class="scenario-title">Example: ${scenario.title}</div>
+                    <div class="scenario-desc">${scenario.desc}</div>
+                `;
+            } else {
+                resultIcon.textContent = '🎯';
+                resultTitle.textContent = 'Custom GPTs';
+                resultTitle.className = 'result-title customgpt';
+                resultSubtitle.textContent = `${result.confidence} Confidence Recommendation`;
+                
+                const scenario = scenarios.customgpt;
+                scenarioPreview.innerHTML = `
+                    <div class="scenario-title">Example: ${scenario.title}</div>
+                    <div class="scenario-desc">${scenario.desc}</div>
+                `;
+            }
+            
+            // Display reasoning
+            reasoningContent.innerHTML = result.reasoning.map(reason => 
+                `<div class="reasoning-point">${reason}</div>`
+            ).join('');
+            
+            // Update progress to 100%
+            document.getElementById('progressFill').style.width = '100%';
+        }
+        
+        function restartQuiz() {
+            currentStep = 1;
+            answers = { frequency: null, quality: null, audience: null };
+            
+            // Reset all sections
+            document.querySelectorAll('.question-section').forEach(q => q.classList.add('hidden'));
+            document.getElementById('question1').classList.remove('hidden');
+            document.getElementById('results').classList.add('hidden');
+            document.querySelector('.navigation').style.display = 'flex';
+            
+            // Reset selections
+            document.querySelectorAll('.choice-btn').forEach(btn => btn.classList.remove('selected'));
+            
+            // Reset navigation
+            updateNavigation();
+            updateProgress();
+            document.getElementById('nextBtn').disabled = true;
+        }
+        
+        // Initialize
+        updateProgress();
+        updateNavigation();
+    </script>
+</body>
+</html>
